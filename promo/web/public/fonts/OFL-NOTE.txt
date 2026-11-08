@@ -1,0 +1,5 @@
+Archivo — Copyright 2016 The Archivo Project Authors (Omnibus-Type)
+IBM Plex Mono / IBM Plex Sans Thai — Copyright © 2017 IBM Corp. with Reserved Font Name "Plex"
+ใช้ภายใต้ SIL Open Font License 1.1 — https://openfontlicense.org
+ดาวน์โหลดจาก Google Fonts (ชุดตัวอักษรละตินและไทย) ใช้ตอน render คลิปโปรโมต
+archivo-expanded-800.ttf = Archivo instance wdth 125 / wght 800 (ใช้กับตัวหนังสือ 3D ผ่าน troika)

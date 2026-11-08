@@ -1,0 +1,19 @@
+# ไฟล์ใหญ่ / ไฟล์ที่ไม่ควรขึ้น repo
+music/
+*.mp4
+*.webm
+*.blend
+*.blend1
+blender/cache/
+
+# รูป reference เป็นเฟรมจากคลิปของคนอื่น ใช้ดูอารมณ์เท่านั้น ไม่เอาขึ้น repo
+reference/
+
+# build / เฟรมที่อัด
+web/node_modules/
+web/dist/
+web/dist-test/
+web/.frames/
+web/public/models/
+qa/compare-ref05.jpg
+__pycache__/
