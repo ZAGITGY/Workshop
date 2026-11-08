@@ -96,6 +96,8 @@ svg.callouts { position: absolute; inset: 0; width: 1440px; height: 900px; overf
 .drop-top { position: absolute; left: 0; right: 0; top: 116px; text-align: center; }
 .swatch { position: absolute; bottom: 132px; display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--paper-ink); transform: translateX(-50%); }
 .swatch i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.macro { position: absolute; left: 112px; bottom: 120px; }
+.macro .macro-t { margin-top: 16px; font-size: 30px; font-weight: 600; line-height: 1.3; color: var(--paper-ink); }
 .drop-bottom { position: absolute; left: 0; right: 0; bottom: 64px; text-align: center; font-size: 15px; color: var(--paper-muted); }
 
 /* studio */

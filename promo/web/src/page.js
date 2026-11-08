@@ -46,12 +46,13 @@ document.body.innerHTML = `
     <section class="sec light" data-i="2">
       <img class="bg" alt="" />
       <div class="ov">
-        <div class="drop-top rv" data-d="0.05"><div class="eyebrow"><b>02</b><span class="th">คอลเลกชันใหม่</span></div></div>
-        <div class="spec l rv" data-d="0.15"><div class="tick"></div><div class="num">240<small>GSM</small></div><div class="lab">น้ำหนักผ้า<br/>หนา อยู่ทรง ไม่บาง</div></div>
-        <div class="spec r rv" data-d="0.25"><div class="tick"></div><div class="num">S–XL</div><div class="lab">4 ไซซ์<br/>ทรงตรง ใส่ได้ทุกคน</div></div>
-        <div class="swatch rv" data-d="0.35" style="left:440px"><i style="background:#1b1c1e"></i>INK</div>
-        <div class="swatch rv" data-d="0.42" style="left:1010px"><i style="background:#6b7a55"></i>SAGE</div>
-        <div class="drop-bottom rv" data-d="0.5">ผลิตจำนวนจำกัด 300 ตัวต่อสี</div>
+        <div class="drop-top rv" data-d="0.05" data-out="6.98"><div class="eyebrow"><b>02</b><span class="th">คอลเลกชันใหม่</span></div></div>
+        <div class="spec l rv" data-d="0.15" data-out="6.98"><div class="tick"></div><div class="num">240<small>GSM</small></div><div class="lab">น้ำหนักผ้า<br/>หนา อยู่ทรง ไม่บาง</div></div>
+        <div class="spec r rv" data-d="0.25" data-out="6.98"><div class="tick"></div><div class="num">S–XL</div><div class="lab">4 ไซซ์<br/>ทรงตรง ใส่ได้ทุกคน</div></div>
+        <div class="swatch rv" data-d="0.35" data-out="6.98" style="left:440px"><i style="background:#1b1c1e"></i>INK</div>
+        <div class="swatch rv" data-d="0.42" data-out="6.98" style="left:1010px"><i style="background:#6b7a55"></i>SAGE</div>
+        <div class="drop-bottom rv" data-d="0.5" data-out="6.98">ผลิตจำนวนจำกัด 300 ตัวต่อสี</div>
+        <div class="macro rv" data-at="7.6"><div class="eyebrow"><b>DETAIL</b><span class="th">ซูมดูเนื้อผ้า</span></div><div class="macro-t">ลายถักซิงเกิลเจอร์ซีย์แน่น<br/>คอริบ 1×1 เย็บตะเข็บคู่</div></div>
       </div>
     </section>
 
@@ -120,10 +121,11 @@ async function loadAnchors() {
   } catch (e) { anchors = {} }
 }
 
-function reveal(el, tA) {
+function reveal(el, tA, T) {
   const d = parseFloat(el.dataset.d || 0)
-  const e = easeOut((tA - d) / 0.8)
-  el.style.opacity = e.toFixed(3)
+  let e = el.dataset.at ? easeOut((T - parseFloat(el.dataset.at)) / 0.8) : easeOut((tA - d) / 0.8)
+  const o = el.dataset.out ? e * (1 - easeOut((T - parseFloat(el.dataset.out)) / 0.35)) : e
+  el.style.opacity = o.toFixed(3)
   el.style.transform = `translateY(${((1 - e) * 26).toFixed(2)}px)`
 }
 
@@ -168,7 +170,7 @@ async function setTime(T) {
         waits.push(imgs[i].decode().catch(() => console.warn('missing frame', src)))
       }
       const tA = T - ARRIVE[i]
-      for (const el of rvs[i]) reveal(el, tA)
+      for (const el of rvs[i]) reveal(el, tA, T)
       if (i === 1) drawCallouts(f, tA)
     }
   })

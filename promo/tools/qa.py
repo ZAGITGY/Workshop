@@ -56,11 +56,11 @@ print(json.dumps(report, indent=1, ensure_ascii=False))
 with open(os.path.join(qa, 'clip-report.json'), 'w') as f:
     json.dump(report, f, indent=1, ensure_ascii=False)
 
-# 4) เทียบกับ reference 05 (เสื้อตอนกล้องใกล้ = ฉาก DROP 01 ช่วงท้าย)
+# 4) เทียบกับ reference 05 (เสื้อตอนกล้องใกล้ = ช็อตซูมเข้าคอเสื้อในฉาก DROP 01)
 ref_path = os.path.join(promo, 'reference', '05-t8.6s.jpg')
 if os.path.exists(ref_path):
     ref = Image.open(ref_path).convert('RGB')
-    ours = frames_at([7.6])[0]
+    ours = frames_at([8.4])[0]  # ช็อตซูมเข้าคอเสื้อ
     H = 960
     a = ref.resize((int(ref.width * H / ref.height), H))
     b = ours.resize((int(ours.width * H / ours.height), H))

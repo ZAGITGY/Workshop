@@ -24,10 +24,16 @@ const parallax = (top, k = 0.22) => (-top / 900) * k
 const DBG = new URLSearchParams(location.search)
 
 // DOF ที่โฟกัสตามวัตถุทุกเฟรม (ตัว wrapper ของ library ก๊อปปี้ target แค่ตอน mount)
-const FollowDOF = forwardRef(function FollowDOF({ target, range, bokehScale }, _) {
+const FollowDOF = forwardRef(function FollowDOF({ target, range, bokehScale, dyn }, _) {
   const ref = useRef()
   useFrame(() => {
-    if (ref.current && ref.current.target !== target) ref.current.target = target
+    if (!ref.current) return
+    if (ref.current.target !== target) ref.current.target = target
+    // ระยะชัดลึก/ความเบลอปรับได้ทุกเฟรม (ใช้ตอนกล้องซูมเข้าใกล้ผ้า)
+    if (dyn) {
+      ref.current.cocMaterial.worldFocusRange = dyn.range
+      ref.current.bokehScale = dyn.bokeh
+    }
   })
   return <DepthOfField ref={ref} target={[0, 0, 0]} worldFocusRange={range} bokehScale={bokehScale} height={720} />
 })
@@ -40,7 +46,7 @@ function Post({ ao = true, dof = null, bloom = 0.22, vignette = 0.7, aoColor = '
   return (
     <EffectComposer multisampling={DBG.has('ms') ? +DBG.get('ms') : 4} disableNormalPass>
       {ao ? <N8AO aoRadius={0.12} distanceFalloff={0.6} intensity={aoIntensity} color={aoColor} quality="medium" halfRes={false} /> : <></>}
-      {dof ? <FollowDOF target={dof.target} range={dof.range} bokehScale={dof.bokehScale} /> : <></>}
+      {dof ? <FollowDOF target={dof.target} range={dof.range} bokehScale={dof.bokehScale} dyn={dof.dyn} /> : <></>}
       {bloom > 0 ? <Bloom intensity={bloom} luminanceThreshold={0.86} luminanceSmoothing={0.12} mipmapBlur /> : <></>}
       <Vignette offset={0.28} darkness={vignette} />
       <ToneMapping mode={mode} />
@@ -203,22 +209,43 @@ export function Field() {
 }
 
 // ============================================================================ 3. DROP 01 (สว่าง)
+// กล้องซูมเข้าใกล้เสื้อสีเซจตรงบีต 6.975 วิ ให้เห็นลายถักเจอร์ซีย์ คอริบ และตะเข็บ
+export const DROP_ZOOM = [6.975, 8.35]
 export function Drop() {
   const a = useRef()
   const b = useRef()
+  const focus = useMemo(() => new THREE.Vector3(), [])
+  const dyn = useMemo(() => ({ range: 1.6, bokeh: 0.0 }), [])
+  const v = useMemo(() => ({ wideP: new THREE.Vector3(), wideT: new THREE.Vector3(), c: new THREE.Vector3(), dir: new THREE.Vector3(), off: new THREE.Vector3(), q: new THREE.Quaternion() }), [])
+  const macroMat = useMemo(() => ({ normalScale: new THREE.Vector2(0.9, 0.9) }), [])
   useCamera((cam, T, top) => {
-    const t = T - TRANS[1]
-    cam.fov = 30
-    cam.position.set(0.12 - 0.1 * smooth(0, 4, t), 0.06 + parallax(top), 2.75 - 0.18 * smooth(0, 4, t))
-    cam.lookAt(0, 0.0 + parallax(top) * 0.5, 0)
-    cam.updateProjectionMatrix()
-  })
-  useFrame(() => {
-    const T = clock.T
+    // เสื้อขยับก่อน แล้วกล้องค่อยตามจุดบนเสื้อ
     a.current.position.set(-0.45, -0.07 + 0.022 * Math.sin(T * 1.4), 0.12)
     a.current.rotation.set(0.05, 0.42 + 0.12 * Math.sin(T * 0.5), 0.05)
     b.current.position.set(0.47, -0.13 + 0.022 * Math.sin(T * 1.4 + 1.7), -0.12)
     b.current.rotation.set(0.03, -0.5 + 0.12 * Math.sin(T * 0.5 + 1), -0.06)
+    a.current.updateMatrixWorld()
+    b.current.updateMatrixWorld()
+    const t = T - TRANS[1]
+    v.wideP.set(0.12 - 0.1 * smooth(0, 4, t), 0.06 + parallax(top), 2.75 - 0.18 * smooth(0, 4, t))
+    v.wideT.set(0, parallax(top) * 0.5, 0)
+    // จุดโฟกัสใกล้: ระหว่างคอเสื้อกับไหล่ซ้ายของตัวเสื้อสีเซจ
+    v.c.set(0.04, 0.3, 0.072).applyMatrix4(b.current.matrixWorld)
+    b.current.getWorldQuaternion(v.q)
+    v.dir.set(0.22, 0.32, 1).normalize().applyQuaternion(v.q)
+    const k = smooth(DROP_ZOOM[0], DROP_ZOOM[1], T)
+    const target = v.wideT.clone().lerp(v.c, k)
+    v.off.copy(v.wideP).sub(v.wideT)
+    const d0 = v.off.length(), d1 = 0.13
+    const dir = v.off.normalize().lerp(v.dir, k).normalize()
+    const d = Math.exp(lerp(Math.log(d0), Math.log(d1), k)) // ซูมแบบ log ให้ความเร็วดูสม่ำเสมอ
+    cam.fov = 30
+    cam.position.copy(target).addScaledVector(dir, d)
+    cam.lookAt(target)
+    cam.updateProjectionMatrix()
+    focus.copy(target)
+    dyn.range = Math.exp(lerp(Math.log(2.0), Math.log(0.09), k))
+    dyn.bokeh = 1.3 * k
   })
   return (
     <>
@@ -238,13 +265,13 @@ export function Drop() {
         <Shirt color="#18191b" />
       </group>
       <group ref={b} scale={0.86}>
-        <Shirt color="#6b7a55" />
+        <Shirt color="#6b7a55" matOpts={macroMat} />
       </group>
       <directionalLight position={[-2.5, 3, 3]} intensity={1.7} color="#fffaf2" castShadow
         shadow-mapSize={[2048, 2048]} shadow-bias={-0.0003} shadow-normalBias={0.015}
         shadow-camera-left={-1.2} shadow-camera-right={1.2} shadow-camera-top={1} shadow-camera-bottom={-1} />
       <directionalLight position={[2.6, 2, -2.2]} intensity={1.4} color="#ffffff" />
-      <Post bloom={0.08} vignette={0.22} aoIntensity={1.6} aoColor="#3a362f" />
+      <Post dof={{ target: focus, range: 2.0, bokehScale: 0.01, dyn }} bloom={0.08} vignette={0.22} aoIntensity={1.6} aoColor="#3a362f" />
     </>
   )
 }
