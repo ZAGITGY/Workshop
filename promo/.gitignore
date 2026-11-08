@@ -16,3 +16,4 @@ web/dist-test/
 web/.frames/
 web/public/models/
 qa/compare-ref05.jpg
+__pycache__/
